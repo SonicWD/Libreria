@@ -1,5 +1,3 @@
-package com.example.biblioteca.Screen.prestamo
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.biblioteca.Model.Prestamo
+import com.example.biblioteca.Model.PrestamoConDetalles
 import com.example.biblioteca.Screen.prestamo.PrestamoViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,7 +24,7 @@ fun PrestamoScreen(
     var showRealizarPrestamoDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var showDetailDialog by remember { mutableStateOf(false) }
-    var selectedPrestamo by remember { mutableStateOf<Prestamo?>(null) }
+    var selectedPrestamo by remember { mutableStateOf<PrestamoConDetalles?>(null) }
     var showActiveLoansByMemberDialog by remember { mutableStateOf(false) }
     var selectedMiembroId by remember { mutableStateOf<Int?>(null) }
 
@@ -55,7 +54,7 @@ fun PrestamoScreen(
                         selectedPrestamo = it
                         showUpdateDialog = true
                     },
-                    onDelete = { viewModel.deletePrestamo(it) },
+                    onDelete = { viewModel.deletePrestamo(it.toPrestamo()) },
                     onViewDetails = {
                         selectedPrestamo = it
                         showDetailDialog = true
@@ -84,7 +83,7 @@ fun PrestamoScreen(
                 prestamo = selectedPrestamo!!,
                 onDismiss = { showUpdateDialog = false },
                 onConfirm = { prestamo ->
-                    viewModel.updatePrestamo(prestamo)
+                    viewModel.updatePrestamo(prestamo.toPrestamo())
                     showUpdateDialog = false
                 }
             )
@@ -92,8 +91,7 @@ fun PrestamoScreen(
 
         if (showDetailDialog && selectedPrestamo != null) {
             PrestamoDetailDialog(
-                prestamoId = selectedPrestamo!!.prestamo_id,
-                viewModel = viewModel,
+                prestamo = selectedPrestamo!!,
                 onDismiss = { showDetailDialog = false }
             )
         }
@@ -110,12 +108,12 @@ fun PrestamoScreen(
 
 @Composable
 fun PrestamoItem(
-    prestamo: Prestamo,
-    onUpdate: (Prestamo) -> Unit,
-    onDelete: (Prestamo) -> Unit,
-    onViewDetails: (Prestamo) -> Unit,
-    onDevolver: (Prestamo) -> Unit,
-    onViewActiveLoansByMember: (Prestamo) -> Unit
+    prestamo: PrestamoConDetalles,
+    onUpdate: (PrestamoConDetalles) -> Unit,
+    onDelete: (PrestamoConDetalles) -> Unit,
+    onViewDetails: (PrestamoConDetalles) -> Unit,
+    onDevolver: (PrestamoConDetalles) -> Unit,
+    onViewActiveLoansByMember: (PrestamoConDetalles) -> Unit
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth()
@@ -130,7 +128,7 @@ fun PrestamoItem(
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "Miembro ID: ${prestamo.miembro_id}",
+                text = "Miembro: ${prestamo.miembro_nombre} ${prestamo.miembro_apellido}",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
@@ -211,9 +209,9 @@ fun RealizarPrestamoDialog(
 
 @Composable
 fun UpdatePrestamoDialog(
-    prestamo: Prestamo,
+    prestamo: PrestamoConDetalles,
     onDismiss: () -> Unit,
-    onConfirm: (Prestamo) -> Unit
+    onConfirm: (PrestamoConDetalles) -> Unit
 ) {
     var libroId by remember { mutableStateOf(prestamo.libro_id.toString()) }
     var miembroId by remember { mutableStateOf(prestamo.miembro_id.toString()) }
@@ -255,34 +253,28 @@ fun UpdatePrestamoDialog(
 
 @Composable
 fun PrestamoDetailDialog(
-    prestamoId: Int,
-    viewModel: PrestamoViewModel,
+    prestamo: PrestamoConDetalles,
     onDismiss: () -> Unit
 ) {
-    val prestamoState = viewModel.getPrestamoById(prestamoId).collectAsState(initial = null)
-    val prestamo = prestamoState.value
-
-    if (prestamo != null) {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("Detalles del Préstamo") },
-            text = {
-                Column {
-                    Text("ID del Libro: ${prestamo.libro_id}")
-                    Text("ID del Miembro: ${prestamo.miembro_id}")
-                    Text("Fecha de Préstamo: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(prestamo.fecha_prestamo)}")
-                    prestamo.fecha_devolucion?.let {
-                        Text("Fecha de Devolución: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it)}")
-                    } ?: Text("No devuelto aún")
-                }
-            },
-            confirmButton = {
-                Button(onClick = onDismiss) {
-                    Text("Cerrar")
-                }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Detalles del Préstamo") },
+        text = {
+            Column {
+                Text("Libro ID: ${prestamo.libro_id}")
+                Text("Miembro: ${prestamo.miembro_nombre} ${prestamo.miembro_apellido}")
+                Text("Fecha de Préstamo: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(prestamo.fecha_prestamo)}")
+                prestamo.fecha_devolucion?.let {
+                    Text("Fecha de Devolución: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it)}")
+                } ?: Text("No devuelto aún")
             }
-        )
-    }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Cerrar")
+            }
+        }
+    )
 }
 
 @Composable
@@ -309,5 +301,16 @@ fun ActiveLoansByMemberDialog(
                 Text("Cerrar")
             }
         }
+    )
+}
+
+// Extension function to convert PrestamoConDetalles to Prestamo
+fun PrestamoConDetalles.toPrestamo(): Prestamo {
+    return Prestamo(
+        prestamo_id = this.prestamo_id,
+        libro_id = this.libro_id,
+        miembro_id = this.miembro_id,
+        fecha_prestamo = this.fecha_prestamo,
+        fecha_devolucion = this.fecha_devolucion
     )
 }

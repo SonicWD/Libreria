@@ -1,5 +1,3 @@
-package com.example.biblioteca.Screen.miembro
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.biblioteca.Model.Miembro
+import com.example.biblioteca.Model.Prestamo
 import com.example.biblioteca.Screen.miembro.MiembroViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -24,12 +23,10 @@ fun MiembroScreen(
     val allMiembros by viewModel.allMiembros.collectAsStateWithLifecycle()
     val filteredMiembros by viewModel.filteredMiembros.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-    val miembrosConPrestamosActivos by viewModel.miembrosConPrestamosActivos.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var showDetailDialog by remember { mutableStateOf(false) }
     var selectedMiembro by remember { mutableStateOf<Miembro?>(null) }
-    var showActiveLoansMembersDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -38,9 +35,6 @@ fun MiembroScreen(
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Agregar Miembro")
-                    }
-                    IconButton(onClick = { showActiveLoansMembersDialog = true }) {
-                        Icon(Icons.Default.Book, contentDescription = "Miembros con préstamos activos")
                     }
                 }
             )
@@ -109,13 +103,6 @@ fun MiembroScreen(
                 miembroId = selectedMiembro!!.miembro_id,
                 viewModel = viewModel,
                 onDismiss = { showDetailDialog = false }
-            )
-        }
-
-        if (showActiveLoansMembersDialog) {
-            ActiveLoansMembersDialog(
-                miembros = miembrosConPrestamosActivos,
-                onDismiss = { showActiveLoansMembersDialog = false }
             )
         }
     }
@@ -266,27 +253,4 @@ fun MiembroDetailDialog(
             }
         )
     }
-}
-
-@Composable
-fun ActiveLoansMembersDialog(
-    miembros: List<Miembro>,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Miembros con Préstamos Activos") },
-        text = {
-            LazyColumn {
-                items(miembros) { miembro ->
-                    Text("${miembro.nombre} ${miembro.apellido}")
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("Cerrar")
-            }
-        }
-    )
 }

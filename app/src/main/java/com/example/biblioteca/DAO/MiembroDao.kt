@@ -7,7 +7,7 @@ import androidx.room.Update
 import androidx.room.Delete
 import kotlinx.coroutines.flow.Flow
 import com.example.biblioteca.Model.Miembro
-import com.example.biblioteca.Model.Prestamo
+import com.example.biblioteca.Model.MiembroConPrestamosActivos
 
 @Dao
 interface MiembroDao {
@@ -30,11 +30,11 @@ interface MiembroDao {
     fun searchMiembros(searchQuery: String): Flow<List<Miembro>>
 
     @Query("""
-        SELECT m.*, COUNT(p.prestamo_id) as prestamos_activos
+        SELECT m.miembro_id, m.nombre, m.apellido, m.fecha_inscripcion, COUNT(p.prestamo_id) as prestamos_activos
         FROM miembros m
         LEFT JOIN prestamos p ON m.miembro_id = p.miembro_id
         WHERE p.fecha_devolucion IS NULL
         GROUP BY m.miembro_id
     """)
-    fun getMiembrosConPrestamosActivos(): Flow<List<Prestamo>>
+    fun getMiembrosConPrestamosActivos(): Flow<List<MiembroConPrestamosActivos>>
 }

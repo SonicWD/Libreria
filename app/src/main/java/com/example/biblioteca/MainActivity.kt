@@ -18,9 +18,7 @@ import com.example.biblioteca.Screen.autor.AutorScreen
 import com.example.biblioteca.Screen.autor.AutorViewModel
 import com.example.biblioteca.Screen.libro.LibroScreen
 import com.example.biblioteca.Screen.libro.LibroViewModel
-import com.example.biblioteca.Screen.miembro.MiembroScreen
 import com.example.biblioteca.Screen.miembro.MiembroViewModel
-import com.example.biblioteca.Screen.prestamo.PrestamoScreen
 import com.example.biblioteca.Screen.prestamo.PrestamoViewModel
 import com.example.biblioteca.ui.theme.BibliotecaTheme
 import com.example.biblioteca.Repository.BibliotecaRepository
